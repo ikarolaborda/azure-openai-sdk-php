@@ -1,0 +1,45 @@
+name: Bug Report
+description: Report an issue with the Azure OpenAI SDK for PHP
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please fill out the following information to help us resolve your issue.
+  - type: textarea
+    attributes:
+      label: Description
+      description: Provide a detailed description of the issue you are facing.
+    validations:
+      required: true
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps To Reproduce
+      description: Provide detailed steps to reproduce your issue. If necessary, please provide a GitHub repository to demonstrate your issue.
+    validations:
+      required: true
+  - type: input
+    id: package-version
+    attributes:
+      label: Package Version
+      description: What version of azure-openai-sdk-php are you running?
+      placeholder: v0.1.0
+    validations:
+      required: true
+  - type: input
+    id: php-version
+    attributes:
+      label: PHP Version
+      description: What version of PHP are you running?
+      placeholder: 8.2.0
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Any other relevant information.
+    validations:
+      required: false

@@ -11,6 +11,7 @@ This package handles Azure-specific deployment-based URL routing, API versioning
   - [Standalone (non-Laravel)](#standalone-non-laravel)
 - [Usage](#usage)
   - [Chat Completions](#chat-completions)
+  - [Responses API](#responses-api)
   - [Streaming](#streaming)
   - [Embeddings](#embeddings)
   - [Multiple Deployments](#multiple-deployments)
@@ -144,6 +145,45 @@ $response = $client->chat()->create([
 ]);
 
 echo $response->choices[0]->message->content;
+```
+
+### Responses API
+
+The [Responses API](https://platform.openai.com/docs/api-reference/responses) is OpenAI's newest interface for generating model outputs. It works the same way as the Python `client.responses.create()`:
+
+```php
+$response = $client->responses()->create([
+    'input' => 'What is the meaning of life?',
+]);
+
+echo $response->outputText;
+```
+
+With tools (web search, file search, or custom functions):
+
+```php
+$response = $client->responses()->create([
+    'input' => 'What was the latest news today?',
+    'tools' => [
+        ['type' => 'web_search_preview'],
+    ],
+]);
+
+echo $response->outputText;
+```
+
+Streamed responses:
+
+```php
+$stream = $client->responses()->createStreamed([
+    'input' => 'Write a short poem about PHP.',
+]);
+
+foreach ($stream as $response) {
+    if ($response->outputText) {
+        echo $response->outputText;
+    }
+}
 ```
 
 ### Streaming

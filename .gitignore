@@ -8,5 +8,3 @@
 *.swo
 playground/*
 .idea
-.agent/
-.env

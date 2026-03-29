@@ -89,6 +89,7 @@ final class AzureRequestHandler implements ClientInterface
         $request = $this->rewriteUrl($request);
 
         if ($this->tokenProvider !== null) {
+            /** @var string $token */
             $token = ($this->tokenProvider)();
             $request = $request->withHeader('Authorization', "Bearer {$token}");
         }
@@ -196,10 +197,16 @@ final class AzureRequestHandler implements ClientInterface
     {
         // Normalize a list response (e.g., models list)
         if (isset($data['data']) && is_array($data['data'])) {
-            $data['data'] = array_map(
-                fn (array $item): array => $this->normalizeItem($item),
-                $data['data'],
-            );
+            $normalized = [];
+
+            foreach ($data['data'] as $item) {
+                if (is_array($item)) {
+                    /** @var array<string, mixed> $item */
+                    $normalized[] = $this->normalizeItem($item);
+                }
+            }
+
+            $data['data'] = $normalized;
 
             return $data;
         }

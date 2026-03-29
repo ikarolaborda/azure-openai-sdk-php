@@ -15,9 +15,12 @@ final class AzureOpenAIServiceProvider extends ServiceProvider implements Deferr
     {
         $this->mergeConfigFrom(__DIR__.'/../config/azure-openai.php', 'azure-openai');
 
-        $this->app->singleton(Client::class, static function ($app): Client {
-            /** @var array{api_key: ?string, endpoint: ?string, deployment: ?string, api_version: ?string} $config */
-            $config = $app['config']['azure-openai'];
+        $this->app->singleton(Client::class, function (): Client {
+            /** @var \Illuminate\Contracts\Config\Repository $repository */
+            $repository = $this->app->make('config');
+
+            /** @var array{api_key: ?string, endpoint: ?string, deployment: ?string, api_version: ?string, use_v1_api: bool} $config */
+            $config = $repository->get('azure-openai');
 
             $factory = AzureOpenAI::factory();
 
@@ -33,7 +36,9 @@ final class AzureOpenAIServiceProvider extends ServiceProvider implements Deferr
                 $factory = $factory->withDeployment($config['deployment']);
             }
 
-            if ($config['api_version'] !== null && $config['api_version'] !== '') {
+            if (! empty($config['use_v1_api'])) {
+                $factory = $factory->withV1Api();
+            } elseif ($config['api_version'] !== null && $config['api_version'] !== '') {
                 $factory = $factory->withApiVersion($config['api_version']);
             }
 

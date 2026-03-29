@@ -67,6 +67,15 @@ final class AzureFactory
     private ?Closure $streamHandler = null;
 
     /**
+     * Whether to use the v1 API (August 2025+) instead of the versioned API.
+     *
+     * The v1 API uses /openai/v1/ as the base path, removes the need for
+     * api-version query parameters, and does not require deployment-scoped
+     * URL rewriting (the model/deployment is specified in the request body).
+     */
+    private bool $useV1Api = false;
+
+    /**
      * Additional HTTP headers.
      *
      * @var array<string, string>
@@ -171,6 +180,20 @@ final class AzureFactory
     }
 
     /**
+     * Enables the v1 API (August 2025+).
+     *
+     * When enabled, the client uses /openai/v1/ as the base path,
+     * omits the api-version query parameter, and skips deployment
+     * URL rewriting (the model/deployment goes in the request body).
+     */
+    public function withV1Api(): self
+    {
+        $this->useV1Api = true;
+
+        return $this;
+    }
+
+    /**
      * Adds a custom HTTP header to the requests.
      */
     public function withHttpHeader(string $name, string $value): self
@@ -189,21 +212,30 @@ final class AzureFactory
 
         $headers = $this->buildHeaders();
 
-        $baseUri = BaseUri::from("{$endpoint}/openai");
+        $basePath = $this->useV1Api ? '/openai/v1' : '/openai';
+        $baseUri = BaseUri::from("{$endpoint}{$basePath}");
 
         $queryParams = QueryParams::create();
-        $queryParams = $queryParams->withParam('api-version', $this->apiVersion ?? throw new Exception(
-            'Azure OpenAI requires an API version. Use withApiVersion() to set one.',
-        ));
+
+        if (! $this->useV1Api) {
+            $queryParams = $queryParams->withParam('api-version', $this->apiVersion ?? throw new Exception(
+                'Azure OpenAI requires an API version. Use withApiVersion() or withV1Api() to configure the API.',
+            ));
+        }
 
         $innerClient = $this->httpClient ??= Psr18ClientDiscovery::find();
 
+        // v1 API does not use deployment-scoped URL rewriting;
+        // the model/deployment is specified in the request body.
+        $deployment = $this->useV1Api ? null : $this->deployment;
+
         $azureHandler = new AzureRequestHandler(
             $innerClient,
-            $this->deployment,
+            $deployment,
             $this->azureAdTokenProvider,
         );
 
+        /** @var Closure(RequestInterface): ResponseInterface $innerStreamHandler */
         $innerStreamHandler = $this->makeStreamHandler($innerClient);
         $wrappedStreamHandler = fn (RequestInterface $request): ResponseInterface => $innerStreamHandler($azureHandler->prepareRequest($request));
 

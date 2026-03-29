@@ -146,6 +146,60 @@ it('may create an azure client with custom stream handler', function () {
     expect($client)->toBeInstanceOf(Client::class);
 });
 
+it('may create an azure client using v1 api', function () {
+    $client = AzureOpenAI::factory()
+        ->withApiKey('test-key')
+        ->withEndpoint('https://my-resource.openai.azure.com')
+        ->withV1Api()
+        ->make();
+
+    expect($client)->toBeInstanceOf(Client::class);
+});
+
+it('may create an azure client using v1 api with explicit param', function () {
+    $client = AzureOpenAI::client(
+        apiKey: 'test-key',
+        endpoint: 'https://my-resource.openai.azure.com',
+        useV1Api: true,
+    );
+
+    expect($client)->toBeInstanceOf(Client::class);
+});
+
+it('may create an azure client using v1 api from env', function () {
+    putenv('AZURE_OPENAI_API_KEY=env-key');
+    putenv('AZURE_OPENAI_ENDPOINT=https://env-resource.openai.azure.com');
+    putenv('AZURE_OPENAI_V1_API=true');
+
+    $client = AzureOpenAI::client();
+
+    expect($client)->toBeInstanceOf(Client::class);
+
+    putenv('AZURE_OPENAI_API_KEY');
+    putenv('AZURE_OPENAI_ENDPOINT');
+    putenv('AZURE_OPENAI_V1_API');
+});
+
+it('v1 api does not require api version', function () {
+    $client = AzureOpenAI::factory()
+        ->withApiKey('test-key')
+        ->withResource('my-resource')
+        ->withV1Api()
+        ->make();
+
+    expect($client)->toBeInstanceOf(Client::class);
+});
+
+it('v1 api does not require deployment', function () {
+    $client = AzureOpenAI::factory()
+        ->withApiKey('test-key')
+        ->withResource('my-resource')
+        ->withV1Api()
+        ->make();
+
+    expect($client)->toBeInstanceOf(Client::class);
+});
+
 it('throws when no endpoint or resource is provided', function () {
     AzureOpenAI::factory()
         ->withApiKey('test-key')
@@ -153,7 +207,7 @@ it('throws when no endpoint or resource is provided', function () {
         ->make();
 })->throws(Exception::class, 'Azure OpenAI requires an endpoint');
 
-it('throws when no api version is provided', function () {
+it('throws when no api version is provided for versioned api', function () {
     AzureOpenAI::factory()
         ->withApiKey('test-key')
         ->withResource('my-resource')

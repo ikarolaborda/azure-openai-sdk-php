@@ -336,6 +336,64 @@ it('does not normalize non-models responses', function () {
     expect($result)->toBe($response);
 });
 
+it('v1 api mode does not rewrite chat completions URL when no deployment', function () {
+    $innerClient = Mockery::mock(ClientInterface::class);
+    $response = Mockery::mock(ResponseInterface::class);
+
+    $innerClient->shouldReceive('sendRequest')
+        ->once()
+        ->withArgs(function (RequestInterface $request) {
+            return $request->getUri()->getPath() === '/openai/v1/chat/completions';
+        })
+        ->andReturn($response);
+
+    // v1 API mode: no deployment (null), model goes in request body
+    $handler = new AzureRequestHandler($innerClient);
+    $request = createMockRequest('/openai/v1/chat/completions');
+
+    $result = $handler->sendRequest($request);
+
+    expect($result)->toBe($response);
+});
+
+it('v1 api mode does not rewrite responses URL when no deployment', function () {
+    $innerClient = Mockery::mock(ClientInterface::class);
+    $response = Mockery::mock(ResponseInterface::class);
+
+    $innerClient->shouldReceive('sendRequest')
+        ->once()
+        ->withArgs(function (RequestInterface $request) {
+            return $request->getUri()->getPath() === '/openai/v1/responses';
+        })
+        ->andReturn($response);
+
+    $handler = new AzureRequestHandler($innerClient);
+    $request = createMockRequest('/openai/v1/responses');
+
+    $result = $handler->sendRequest($request);
+
+    expect($result)->toBe($response);
+});
+
+it('v1 api mode still injects azure ad token from provider', function () {
+    $innerClient = Mockery::mock(ClientInterface::class);
+    $response = Mockery::mock(ResponseInterface::class);
+
+    $innerClient->shouldReceive('sendRequest')->once()->andReturn($response);
+
+    $tokenCalled = false;
+    $handler = new AzureRequestHandler($innerClient, null, function () use (&$tokenCalled) {
+        $tokenCalled = true;
+
+        return 'fresh-v1-token';
+    });
+
+    $request = createMockRequest('/openai/v1/chat/completions');
+    $handler->sendRequest($request);
+
+    expect($tokenCalled)->toBeTrue();
+});
+
 it('preserves existing OpenAI format fields during normalization', function () {
     $innerClient = Mockery::mock(ClientInterface::class);
 

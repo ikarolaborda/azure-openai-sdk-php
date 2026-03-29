@@ -46,11 +46,28 @@ return [
     |
     | The Azure OpenAI API version to use. Check the Azure documentation
     | for available versions. Stable versions are recommended for production.
+    | Ignored when use_v1_api is enabled.
     |
     | @see \IkaroLaborda\AzureOpenAI\Enums\AzureApiVersion
     |
     */
 
     'api_version' => env('AZURE_OPENAI_API_VERSION', '2024-10-21'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Use v1 API
+    |--------------------------------------------------------------------------
+    |
+    | Enable the Azure OpenAI v1 API (available since August 2025).
+    | When enabled, the client uses /openai/v1/ as the base path,
+    | removes the need for api-version parameters, and the model
+    | deployment is specified in the request body instead of the URL.
+    |
+    | @see https://learn.microsoft.com/en-us/azure/foundry/openai/api-version-lifecycle
+    |
+    */
+
+    'use_v1_api' => env('AZURE_OPENAI_V1_API', false),
 
 ];
